@@ -44,13 +44,16 @@ std::string mInterpolator::forceDecSep(double val, char forcedDecSep)
 		char cSym = sVal[i];
 		if (cSym == '0' || cSym == '1' || cSym == '2' ||
 			cSym == '3' || cSym == '4' || cSym == '5' ||
-			cSym == '6' || cSym == '7' || cSym == '8' || cSym == '9')
+			cSym == '6' || cSym == '7' || cSym == '8' || 
+			cSym == '9' || cSym == '-' )
 		{
 			sValClean += cSym;
 		}
 		else
 		{
 			if (cSym == '.')
+				sValClean += forcedDecSep;
+			if (cSym == '-')
 				sValClean += forcedDecSep;
 		}
 	}
