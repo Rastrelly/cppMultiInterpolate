@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <boost/math/interpolators/cardinal_cubic_b_spline.hpp>
 
 struct mPoint
 {
@@ -58,5 +59,38 @@ public:
 	mInterpLagrange(double vx1, double vx2, int vres, int vnres) :mInterpolator(vx1, vx2, vres, vnres)
 	{
 		callInterpolate();
+	}
+};
+
+//newton interpolator class
+class mInterpNewton : public mInterpolator
+{
+
+public:
+	double newtonInterp(double sx);
+	void callInterpolate();
+	mInterpNewton(double vx1, double vx2, int vres, int vnres) :mInterpolator(vx1, vx2, vres, vnres)
+	{
+		callInterpolate();
+	}
+};
+
+//newton interpolator class
+class mInterpSpline : public mInterpolator
+{
+private:
+	boost::math::interpolators::cardinal_cubic_b_spline<double> *spline;
+public:
+	void prepareSpline();
+	double splineInterp(double sx);
+	void callInterpolate();
+	mInterpSpline(double vx1, double vx2, int vres, int vnres) :mInterpolator(vx1, vx2, vres, vnres)
+	{
+		prepareSpline();
+		callInterpolate();
+	}
+	~mInterpSpline()
+	{
+		delete(spline);
 	}
 };

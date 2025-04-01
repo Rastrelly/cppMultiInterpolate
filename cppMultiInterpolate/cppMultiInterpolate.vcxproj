@@ -72,7 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\CPPLIBS\freeglut360\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\CPPLIBS\boost_1_77_0;C:\CPPLIBS\freeglut360\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\CPPLIBS\freeglut360\built\lib\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

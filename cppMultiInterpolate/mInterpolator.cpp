@@ -110,7 +110,7 @@ void mInterpolator::buildFuncData()
 
 double mInterpolator::mathFunction(double x)
 {
-	return 10 * pow(x, 2) + 50 * sin(100 * x*3.14 / 180);
+	return 50 * sin(x*3.14 / 180);
 }
 
 void mInterpolator::getNeighbourPoints(double x, mPoint &np1, mPoint &np2)
@@ -152,6 +152,8 @@ void mInterpLinear::callInterpolate()
 		getNeighbourPoints(cx, np1, np2);
 		double cy = linterp(np1,np2,cx);
 		interpPoints[i] = {cx,cy};
+		if (i % 100 == 0)
+		std::cout << trunc(100 * ((double)i / (double)getNewRes())) << "\%\n";
 	}
 }
 
@@ -191,6 +193,83 @@ void mInterpLagrange::callInterpolate()
 		double cx = getX1() + i * newStep;
 		double cy = lagrangeXY(cx);
 		interpPoints[i] = { cx,cy };
+		if (i % 100 == 0)
+			std::cout << trunc(100 * ((double)i / (double)getNewRes())) << "\%\n";
 	}
 }
 
+
+double mInterpNewton::newtonInterp(double sx)
+{
+	//source: https://gist.github.com/komasaru/6a10c02cf3f5e5fe411d7fb3987b36dd
+
+	int l = basePoints.size();
+	std::vector<double> w = {};
+	std::vector<double> c = {};
+	w.resize(l);
+	c.resize(l);
+
+	for (int i = 0; i < l; i++)
+	{
+		w[i] = basePoints[i].y;
+		for (int j = i - 1; j >= 0; j--)
+		{
+			w[j] = (w[j + 1] - w[j]) / (basePoints[i].x - basePoints[j].x);
+		}
+		c[i] = w[0];
+	}
+
+	double s = c[l - 1];
+	for (int i = l - 2; i >= 0; i--)
+	{
+		s = s * (sx - basePoints[i].x) + c[i];
+	}
+
+	return s;
+}
+
+void mInterpNewton::callInterpolate()
+{
+	double newStep = (getX2() - getX1()) / getNewRes();
+	interpPoints.resize(getNewRes() + 1);
+
+	for (int i = 0; i <= getNewRes(); i++)
+	{
+		double cx = getX1() + i * newStep;
+		double cy = newtonInterp(cx);
+		interpPoints[i] = { cx,cy };
+		if (i % 100 == 0)
+			std::cout << trunc(100 * ((double)i / (double)getNewRes())) << "\%\n";
+	}
+}
+
+void mInterpSpline::prepareSpline()
+{
+	std::vector<double> yVals = {};
+	yVals.resize(basePoints.size());
+	
+	for (int i = 0; i < basePoints.size(); i++)
+		yVals[i] = basePoints[i].y;
+
+	spline = new boost::math::interpolators::cardinal_cubic_b_spline<double>(yVals.begin(),yVals.end(),getX1(),getStep());
+}
+
+double mInterpSpline::splineInterp(double sx)
+{
+	return spline->operator()(sx);
+}
+
+void mInterpSpline::callInterpolate()
+{
+	double newStep = (getX2() - getX1()) / getNewRes();
+	interpPoints.resize(getNewRes() + 1);
+
+	for (int i = 0; i <= getNewRes(); i++)
+	{
+		double cx = getX1() + i * newStep;
+		double cy = splineInterp(cx);
+		interpPoints[i] = { cx,cy };
+		if (i % 100 == 0)
+			std::cout << trunc(100 * ((double)i / (double)getNewRes())) << "\%\n";
+	}
+}

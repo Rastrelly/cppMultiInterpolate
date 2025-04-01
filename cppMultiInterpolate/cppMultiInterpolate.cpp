@@ -6,6 +6,8 @@ double chartYB = 0, chartYT = 0, chartXL = 0, chartXR = 0;
 pVec basePts = {};
 pVec linPts = {};
 pVec lagPts = {};
+pVec nwtPts = {};
+pVec splPts = {};
 
 void inGLDRawRect(double xc, double yc, double yCoeff, double r)
 {
@@ -52,6 +54,12 @@ void cbDisplay()
 	glColor3f(0.0f, 1.0f, 0.0f);
 	inGLChartVector(lagPts);
 
+	glColor3f(0.0f, 0.0f, 1.0f);
+	inGLChartVector(nwtPts);
+
+	glColor3f(1.0f, 1.0f, 0.0f);
+	inGLChartVector(splPts);
+
 	glLineWidth(1);
 	glColor3f(1.0f, 0.0f, 0.0f);
 	for (int i = 0; i < basePts.size(); i++)
@@ -71,21 +79,35 @@ void cbReshape(int w, int h)
 int main(int argc, char **argv)
 {
 
-	double x1 = -180, x2 = 180;
+	double x1 = -360, x2 = 360;
 	int res = 100;
 	int nRes = 1000;
 
 	//interpolate stuff
+	std::cout << "Linear...\n";
 	mInterpLinear linInt(x1,x2,res,nRes);
-	linInt.printDataToCSV("linInterpOutput.csv");
+	//linInt.printDataToCSV("linInterpOutput.csv");
 
+	std::cout << "Lagrange...\n";
 	mInterpLagrange lagInt(x1, x2, res, nRes);
-	lagInt.printDataToCSV("lagInterpOutput.csv");
+	//lagInt.printDataToCSV("lagInterpOutput.csv");
+
+	std::cout << "Newton...\n";
+	mInterpNewton nwtInt(x1, x2, res, nRes);
+	//nwtInt.printDataToCSV("newtInterpOutput.csv");
+
+	std::cout << "Spline...\n";
+	mInterpSpline splInt(x1, x2, res, nRes);
+	//splInt.printDataToCSV("splInterpOutput.csv");
+
+	std::cout << "All done, rendering...\n";
 
 	//transfer data outside of calss objects
 	basePts = linInt.basePoints;
 	linPts = linInt.interpPoints;
 	lagPts = lagInt.interpPoints;
+	nwtPts = nwtInt.interpPoints;
+	splPts = splInt.interpPoints;
 	
 	//discover render area
 	lagInt.getDataArea(chartXL, chartXR, chartYB, chartYT, true);
