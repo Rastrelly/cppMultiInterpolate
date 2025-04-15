@@ -9,6 +9,16 @@ mInterpolator::mInterpolator(double vx1, double vx2, int vres, int vnres)
 	buildFuncData();
 }
 
+mInterpolator::mInterpolator(double vx1, double vx2, int vres, int vnres, pVec givenData)
+{
+	x1 = vx1;
+	x2 = vx2;
+	res = vres;
+	newRes = vnres;
+	step = givenData[1].x - givenData[0].x;
+	basePoints = givenData;
+}
+
 void mInterpolator::getDataArea(double &xMin, double &xMax, double &yMin, double &yMax, bool clambToBase)
 {
 	//parse base
@@ -268,6 +278,107 @@ void mInterpSpline::callInterpolate()
 	{
 		double cx = getX1() + i * newStep;
 		double cy = splineInterp(cx);
+		interpPoints[i] = { cx,cy };
+		if (i % 100 == 0)
+			std::cout << trunc(100 * ((double)i / (double)getNewRes())) << "\%\n";
+	}
+}
+
+
+void mInterpLSLinear::calcInterpCoeffs()
+{
+	sxi = 0;
+	sxi2 = 0;
+	syi = 0;
+	sxyi = 0;
+
+	for (int i = 0; i < basePoints.size(); i++)
+	{
+		sxi += basePoints[i].x;
+		sxi2 += pow(basePoints[i].x, 2);
+		syi += basePoints[i].y;
+		sxyi += basePoints[i].x*basePoints[i].y;
+	}
+}
+
+
+double mInterpLSLinear::lsqLinInterp(double x, double a , double b)
+{
+	int n = basePoints.size();
+	return a * x + b;
+}
+
+
+void mInterpLSLinear::callInterpolate()
+{
+	double newStep = (getX2() - getX1()) / getNewRes();
+	interpPoints.resize(getNewRes() + 1);
+	calcInterpCoeffs();
+	std::cout << "sxi = " << sxi << "; syi = " << syi << "\n";
+	double n = basePoints.size();
+	double ca = (n*sxyi-sxi*syi)/(n*sxi2-pow(sxi,2));
+	double cb = ((1/n)*syi)-((ca/n)*sxi);
+	std::cout << "a = " << ca << "; b = " << cb << "\n";
+
+	for (int i = 0; i <= getNewRes(); i++)
+	{
+		double cx = getX1() + i * newStep;
+		double cy = lsqLinInterp(cx, ca, cb);
+		interpPoints[i] = { cx,cy };
+		if (i % 100 == 0)
+			std::cout << trunc(100 * ((double)i / (double)getNewRes())) << "\%\n";
+	}
+}
+
+
+void mInterpLSCubic::calcInterpCoeffs()
+{
+	//sxi, syi, sxi2, sxyi, sx2yi, sxi3,sxi4;
+	sxi = 0;
+	sxi2 = 0;
+	sxi3 = 0;
+	sxi4 = 0;
+	syi = 0;
+	sxyi = 0;
+	sx2yi = 0;
+
+	for (int i = 0; i < basePoints.size(); i++)
+	{
+		sxi += basePoints[i].x;
+		sxi2 += pow(basePoints[i].x, 2);
+		sxi3 += pow(basePoints[i].x, 3);
+		sxi4 += pow(basePoints[i].x, 4);
+		syi += basePoints[i].y;
+		sxyi += basePoints[i].x*basePoints[i].y;
+		sx2yi += pow(basePoints[i].x,2)*basePoints[i].y;
+	}
+}
+
+
+double mInterpLSCubic::lsqCubInterp(double x, double a0, double a1, double a2, double a3)
+{
+	return a2+a1*x+a0*pow(x,2);
+}
+
+
+void mInterpLSCubic::callInterpolate()
+{
+	double newStep = (getX2() - getX1()) / getNewRes();
+	interpPoints.resize(getNewRes() + 1);
+	calcInterpCoeffs();
+	double n = basePoints.size();
+	double ca0 = (sx2yi*pow(sxi,2)-sxyi*sxi*sxi2-sxi3*syi*sxi+syi*pow(sxi2,2)-n*sx2yi*sxi2+n*sxi3*sxyi)/
+		(sxi4*pow(sxi,2)-2*sxi*sxi2*sxi3+pow(sxi2,3)-n*sxi4*sxi2+n*pow(sxi3,2));
+	double ca1 = (pow(sxi2,2)*sxyi-n*sxi4*sxyi+n*sxi3*sx2yi-sxi*sxi2*sx2yi+sxi*sxi4*syi-sxi2*sxi3*syi)/
+		(sxi4*pow(sxi,2)-2*sxi*sxi2*sxi3+pow(sxi2,3)-n*sxi4*sxi2+n*pow(sxi3,2));
+	double ca2 = (sx2yi*pow(sxi2,2)-sxyi*sxi2*sxi3-sxi4*syi*sxi2+syi*pow(sxi3,2)-sxi*sx2yi*sxi3+sxi*sxi4*sxyi)/
+		(sxi4*pow(sxi,2)-2*sxi*sxi2*sxi3+pow(sxi2,3)-n*sxi4*sxi2+n*pow(sxi3,2));
+	std::cout << "a0 = " << ca0 << "; a1 = " << ca1 << "; a2 = " << ca2 << "\n";
+
+	for (int i = 0; i <= getNewRes(); i++)
+	{
+		double cx = getX1() + i * newStep;
+		double cy = lsqCubInterp(cx, ca0, ca1, ca2, 0);
 		interpPoints[i] = { cx,cy };
 		if (i % 100 == 0)
 			std::cout << trunc(100 * ((double)i / (double)getNewRes())) << "\%\n";

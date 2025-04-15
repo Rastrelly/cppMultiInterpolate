@@ -35,6 +35,7 @@ public:
 	void setNewRes(int val) { newRes = val; }
 	void getNeighbourPoints(double x, mPoint &np1, mPoint &np2);
 	mInterpolator(double vx1, double vx2, int vres, int vnres);
+	mInterpolator(double vx1, double vx2, int vres, int vnres, pVec givenData);
 	virtual void callInterpolate() = 0;
 };
 
@@ -45,6 +46,10 @@ public:
 	double linterp(mPoint p1, mPoint p2, double px);
 	void callInterpolate();
 	mInterpLinear(double vx1, double vx2, int vres, int vnres) :mInterpolator(vx1, vx2, vres, vnres)
+	{
+		callInterpolate();
+	}
+	mInterpLinear(double vx1, double vx2, int vres, int vnres, pVec dat) :mInterpolator(vx1, vx2, vres, vnres, dat)
 	{
 		callInterpolate();
 	}
@@ -60,6 +65,10 @@ public:
 	{
 		callInterpolate();
 	}
+	mInterpLagrange(double vx1, double vx2, int vres, int vnres, pVec dat) :mInterpolator(vx1, vx2, vres, vnres, dat)
+	{
+		callInterpolate();
+	}
 };
 
 //newton interpolator class
@@ -70,6 +79,10 @@ public:
 	double newtonInterp(double sx);
 	void callInterpolate();
 	mInterpNewton(double vx1, double vx2, int vres, int vnres) :mInterpolator(vx1, vx2, vres, vnres)
+	{
+		callInterpolate();
+	}
+	mInterpNewton(double vx1, double vx2, int vres, int vnres, pVec dat) :mInterpolator(vx1, vx2, vres, vnres, dat)
 	{
 		callInterpolate();
 	}
@@ -89,8 +102,55 @@ public:
 		prepareSpline();
 		callInterpolate();
 	}
+	mInterpSpline(double vx1, double vx2, int vres, int vnres, pVec dat) :mInterpolator(vx1, vx2, vres, vnres, dat)
+	{
+		prepareSpline();
+		callInterpolate();
+	}
 	~mInterpSpline()
 	{
 		delete(spline);
+	}
+};
+
+
+//least squares linear
+class mInterpLSLinear : public mInterpolator
+{
+private:
+	double sxi, syi, sxi2, sxyi;
+
+public:
+	void calcInterpCoeffs();
+	double lsqLinInterp(double x, double a, double b);
+	void callInterpolate();
+	mInterpLSLinear(double vx1, double vx2, int vres, int vnres) :mInterpolator(vx1, vx2, vres, vnres)
+	{
+		callInterpolate();
+	}
+	mInterpLSLinear(double vx1, double vx2, int vres, int vnres, pVec dat) :mInterpolator(vx1, vx2, vres, vnres, dat)
+	{
+		callInterpolate();
+	}
+};
+
+
+//least squares linear
+class mInterpLSCubic : public mInterpolator
+{
+private:
+	double sxi, syi, sxi2, sxyi, sx2yi, sxi3, sxi4;
+
+public:
+	void calcInterpCoeffs();
+	double lsqCubInterp(double x, double a0, double a1, double a2, double a3);
+	void callInterpolate();
+	mInterpLSCubic(double vx1, double vx2, int vres, int vnres) :mInterpolator(vx1, vx2, vres, vnres)
+	{
+		callInterpolate();
+	}
+	mInterpLSCubic(double vx1, double vx2, int vres, int vnres, pVec dat) :mInterpolator(vx1, vx2, vres, vnres, dat)
+	{
+		callInterpolate();
 	}
 };
